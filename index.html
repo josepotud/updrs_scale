@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora MDS-UPDRS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .btn-group-toggle .btn input[type="radio"] {
+            display: none; /* Oculta el radio button real */
+        }
+        .btn-group-toggle .btn.active {
+            background-color: #0d6efd; /* Color azul de Bootstrap */
+            color: white;
+            font-weight: bold;
+        }
+        /* Estilo para cuando el GRUPO de botones está enfocado por Tab */
+        .btn-group-toggle:focus {
+            outline: 2px solid #0d6efd;
+            outline-offset: 2px;
+            border-radius: .375rem; /* Coincide con el radio de borde de Bootstrap */
+        }
+        .form-label {
+            margin-bottom: 0; /* Reduce el espacio de las etiquetas */
+            font-size: 0.9rem;
+        }
+        .section-header {
+            background-color: #f8f9fa;
+            border-left: 4px solid #0d6efd;
+            padding: 10px 15px;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .legend-box {
+            background-color: #e9ecef;
+            border-radius: 5px;
+            padding: 10px;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .sticky-result {
+            position: sticky;
+            top: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container mt-4 mb-5">
+        <h1 class="mb-2 text-center text-primary">Formulario MDS-UPDRS</h1>
+        <p class="text-center text-muted">Movement Disorder Society - Unified Parkinson's Disease Rating Scale</p>
+
+        <div class="legend-box shadow-sm">
+            <strong>Leyenda de puntuación:</strong> 
+            <span class="mx-2"><span class="badge bg-secondary">0</span> Normal</span>
+            <span class="mx-2"><span class="badge bg-success">1</span> Mínimo</span>
+            <span class="mx-2"><span class="badge bg-info text-dark">2</span> Leve</span>
+            <span class="mx-2"><span class="badge bg-warning text-dark">3</span> Moderado</span>
+            <span class="mx-2"><span class="badge bg-danger">4</span> Grave</span>
+            <br>
+            <small class="text-muted mt-1 d-block"><em>Atajo de teclado: Usa <b>Tab</b> para avanzar y las teclas del <b>0 al 4</b> para seleccionar rápidamente.</em></small>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="bg-white shadow-sm p-4 rounded">
+                    <form id="escalasForm">
+                        
+                        <!-- Datos Clínicos Adicionales -->
+                        <div class="row mb-3 p-3 bg-light rounded border">
+                            <div class="col-md-6 mb-2 mb-md-0">
+                                <label class="form-label fw-bold mb-1">Estado Clínico del Paciente:</label>
+                                <select id="estadoClinico" class="form-select form-select-sm">
+                                    <option value="ON">ON (Buena respuesta a medicación)</option>
+                                    <option value="OFF">OFF (Mala respuesta/Sin medicación)</option>
+                                    <option value="No aplicable">No aplicable / No toma medicación</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold mb-1">Estadio de Hoehn y Yahr:</label>
+                                <select id="hoehnYahr" class="form-select form-select-sm">
+                                    <option value="No evaluado">No evaluado</option>
+                                    <option value="0">0 - Asintomático</option>
+                                    <option value="1">1 - Afectación unilateral</option>
+                                    <option value="2">2 - Afectación bilateral sin alteración del equilibrio</option>
+                                    <option value="3">3 - Afectación leve a moderada (físicamente independiente)</option>
+                                    <option value="4">4 - Discapacidad grave (capaz de caminar/estar de pie sin ayuda)</option>
+                                    <option value="5">5 - Confinado a silla de ruedas o cama</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div id="formContainer">
+                            <!-- El contenido se generará dinámicamente aquí -->
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="button" class="btn btn-outline-danger" id="resetButton">Reiniciar Formulario</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-lg-4 mt-4 mt-lg-0">
+                <div class="sticky-result border border-primary">
+                    <h4 class="text-primary mb-3">Resultado para Historia Clínica</h4>
+                    
+                    <div class="row text-center mb-3">
+                        <div class="col-6 mb-2"><div class="p-2 bg-light rounded"><b>Parte I</b><br><span id="tot-p1">0</span> / 52</div></div>
+                        <div class="col-6 mb-2"><div class="p-2 bg-light rounded"><b>Parte II</b><br><span id="tot-p2">0</span> / 52</div></div>
+                        <div class="col-6 mb-2"><div class="p-2 bg-light rounded"><b>Parte III</b><br><span id="tot-p3">0</span> / 132</div></div>
+                        <div class="col-6 mb-2"><div class="p-2 bg-light rounded"><b>Parte IV</b><br><span id="tot-p4">0</span> / 24</div></div>
+                        <div class="col-12 mt-2"><div class="p-2 bg-primary text-white rounded fs-5"><b>TOTAL UPDRS: <span id="tot-all">0</span></b> / 260</div></div>
+                    </div>
+
+                    <textarea class="form-control mb-3 font-monospace" id="resultado" rows="8" readonly style="font-size: 0.85rem;"></textarea>
+                    
+                    <button type="button" class="btn btn-primary w-100 fw-bold" id="copyButton">
+                        📋 Copiar Resultado
+                    </button>
+                    <div id="copyAlert" class="alert alert-success mt-2 d-none py-2 text-center" role="alert">
+                        ¡Copiado al portapapeles!
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Estructura de datos de la MDS-UPDRS
+        const updrsData = [
+            {
+                id: "part1",
+                title: "Parte I: Aspectos No-Motores de las EVD",
+                items: [
+                    { id: "1.1", label: "1.1 Deterioro cognitivo" },
+                    { id: "1.2", label: "1.2 Alucinaciones y psicosis" },
+                    { id: "1.3", label: "1.3 Estado de ánimo depresivo" },
+                    { id: "1.4", label: "1.4 Ansiedad" },
+                    { id: "1.5", label: "1.5 Apatía" },
+                    { id: "1.6", label: "1.6 Manifestaciones del Síndrome de Disregulación Dopaminérgica" },
+                    { id: "1.7", label: "1.7 Problemas de sueño" },
+                    { id: "1.8", label: "1.8 Somnolencia diurna" },
+                    { id: "1.9", label: "1.9 Dolor y otras sensaciones" },
+                    { id: "1.10", label: "1.10 Problemas urinarios" },
+                    { id: "1.11", label: "1.11 Problemas de estreñimiento" },
+                    { id: "1.12", label: "1.12 Sensación de mareo al ponerse de pie" },
+                    { id: "1.13", label: "1.13 Fatiga" }
+                ]
+            },
+            {
+                id: "part2",
+                title: "Parte II: Aspectos Motores de las EVD",
+                items: [
+                    { id: "2.1", label: "2.1 Hablar" },
+                    { id: "2.2", label: "2.2 Saliva y babeo" },
+                    { id: "2.3", label: "2.3 Masticación y deglución" },
+                    { id: "2.4", label: "2.4 Actividades para comer" },
+                    { id: "2.5", label: "2.5 Vestirse" },
+                    { id: "2.6", label: "2.6 Higiene" },
+                    { id: "2.7", label: "2.7 Escritura" },
+                    { id: "2.8", label: "2.8 Hobbies y otras actividades" },
+                    { id: "2.9", label: "2.9 Darse la vuelta en la cama" },
+                    { id: "2.10", label: "2.10 Temblor" },
+                    { id: "2.11", label: "2.11 Levantarse de la cama, coche o sillón" },
+                    { id: "2.12", label: "2.12 Caminar y equilibrio" },
+                    { id: "2.13", label: "2.13 Congelaciones o bloqueos" }
+                ]
+            },
+            {
+                id: "part3",
+                title: "Parte III: Exploración Motora",
+                items: [
+                    { id: "3.1", label: "3.1 Lenguaje" },
+                    { id: "3.2", label: "3.2 Expresión facial" },
+                    { id: "3.3a", label: "3.3a Rigidez - Cuello" },
+                    { id: "3.3b", label: "3.3b Rigidez - MSD" },
+                    { id: "3.3c", label: "3.3c Rigidez - MSI" },
+                    { id: "3.3d", label: "3.3d Rigidez - MID" },
+                    { id: "3.3e", label: "3.3e Rigidez - MII" },
+                    { id: "3.4a", label: "3.4a Golpeteo de dedos (Mano dcha)" },
+                    { id: "3.4b", label: "3.4b Golpeteo de dedos (Mano izda)" },
+                    { id: "3.5a", label: "3.5a Movimientos de manos (Mano dcha)" },
+                    { id: "3.5b", label: "3.5b Movimientos de manos (Mano izda)" },
+                    { id: "3.6a", label: "3.6a Pronación-supinación (Mano dcha)" },
+                    { id: "3.6b", label: "3.6b Pronación-supinación (Mano izda)" },
+                    { id: "3.7a", label: "3.7a Golpeteo dedos de pies (Pie dcho)" },
+                    { id: "3.7b", label: "3.7b Golpeteo dedos de pies (Pie izdo)" },
+                    { id: "3.8a", label: "3.8a Agilidad de piernas (Pierna dcha)" },
+                    { id: "3.8b", label: "3.8b Agilidad de piernas (Pierna izda)" },
+                    { id: "3.9", label: "3.9 Levantarse de la silla" },
+                    { id: "3.10", label: "3.10 Marcha" },
+                    { id: "3.11", label: "3.11 Congelación de la marcha" },
+                    { id: "3.12", label: "3.12 Estabilidad postural" },
+                    { id: "3.13", label: "3.13 Postura" },
+                    { id: "3.14", label: "3.14 Espontaneidad global del movimiento" },
+                    { id: "3.15a", label: "3.15a Temblor postural manos (Mano dcha)" },
+                    { id: "3.15b", label: "3.15b Temblor postural manos (Mano izda)" },
+                    { id: "3.16a", label: "3.16a Temblor de acción manos (Mano dcha)" },
+                    { id: "3.16b", label: "3.16b Temblor de acción manos (Mano izda)" },
+                    { id: "3.17a", label: "3.17a Amplitud temblor reposo (MSD)" },
+                    { id: "3.17b", label: "3.17b Amplitud temblor reposo (MSI)" },
+                    { id: "3.17c", label: "3.17c Amplitud temblor reposo (MID)" },
+                    { id: "3.17d", label: "3.17d Amplitud temblor reposo (MII)" },
+                    { id: "3.17e", label: "3.17e Amplitud temblor reposo (Labio/mandíbula)" },
+                    { id: "3.18", label: "3.18 Persistencia del temblor de reposo" }
+                ]
+            },
+            {
+                id: "part4",
+                title: "Parte IV: Complicaciones Motoras",
+                items: [
+                    { id: "4.1", label: "4.1 Tiempo con discinesias" },
+                    { id: "4.2", label: "4.2 Impacto funcional de las discinesias" },
+                    { id: "4.3", label: "4.3 Tiempo en estado OFF" },
+                    { id: "4.4", label: "4.4 Impacto funcional de las fluctuaciones" },
+                    { id: "4.5", label: "4.5 Complejidad de las fluctuaciones motoras" },
+                    { id: "4.6", label: "4.6 Distonía dolorosa en estado OFF" }
+                ]
+            }
+        ];
+
+        // Función para renderizar el formulario dinámicamente
+        function renderizarFormulario() {
+            const container = $('#formContainer');
+            
+            updrsData.forEach(section => {
+                // Añadir cabecera de sección
+                container.append(`<h4 class="section-header">${section.title}</h4>`);
+                
+                // Añadir cada pregunta
+                section.items.forEach(item => {
+                    const cleanId = item.id.replace('.', '_');
+                    
+                    const rowHtml = `
+                    <div class="row mb-1 align-items-center py-1 border-bottom border-light">
+                        <div class="col-md-7">
+                            <label class="form-label">${item.label}</label>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="btn-group btn-group-toggle d-flex flex-wrap w-100" data-section="${section.id}" data-toggle="buttons" tabindex="0">
+                                ${[0, 1, 2, 3, 4].map(val => `
+                                    <label class="btn btn-outline-primary btn-sm flex-fill ${val === 0 ? 'active' : ''}">
+                                        <input type="radio" name="${cleanId}" value="${val}" ${val === 0 ? 'checked' : ''} tabindex="-1"> ${val}
+                                    </label>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>`;
+                    
+                    container.append(rowHtml);
+                });
+            });
+        }
+
+        // Calcular el resultado total y generar el texto
+        function calcularResultado() {
+            let scores = {
+                part1: 0,
+                part2: 0,
+                part3: 0,
+                part4: 0
+            };
+            
+            let vals = {
+                part1: [],
+                part2: [],
+                part3: [],
+                part4: []
+            };
+
+            // Sumar y agrupar valores
+            $('#escalasForm input[type="radio"]:checked').each(function() {
+                let val = parseInt($(this).val()) || 0;
+                let section = $(this).closest('.btn-group-toggle').data('section');
+                
+                if(section && scores[section] !== undefined) {
+                    scores[section] += val;
+                    vals[section].push(val); // Guardar el valor exacto para la lista
+                }
+            });
+
+            let totalUPDRS = scores.part1 + scores.part2 + scores.part3 + scores.part4;
+            
+            // Actualizar UI badges
+            $('#tot-p1').text(scores.part1);
+            $('#tot-p2').text(scores.part2);
+            $('#tot-p3').text(scores.part3);
+            $('#tot-p4').text(scores.part4);
+            $('#tot-all').text(totalUPDRS);
+
+            // Valores extra
+            let estado = $('#estadoClinico').val();
+            let hy = $('#hoehnYahr').val();
+
+            // Construir texto para Historia Clínica con los vectores de valores
+            let texto = `ESCALA MDS-UPDRS - Total: ${totalUPDRS} puntos\n`;
+            texto += `Estado Clínico: ${estado} | Estadio Hoehn y Yahr: ${hy}\n`;
+            texto += `--------------------------------------------------\n`;
+            texto += `Parte I: ${scores.part1}/52 puntos [${vals.part1.join(', ')}] \n`;
+            texto += `Parte II: ${scores.part2}/52 puntos [${vals.part2.join(', ')}] \n`;
+            texto += `Parte III: ${scores.part3}/132 puntos [${vals.part3.join(', ')}] \n`;
+            texto += `Parte IV: ${scores.part4}/24 puntos [${vals.part4.join(', ')}] \n`;
+            
+            // Vector de datos completo unificado para extracción automatizada
+            let vectorCompleto = [].concat(vals.part1, vals.part2, vals.part3, vals.part4);
+            texto += `Vector completo: [${vectorCompleto.join(', ')}]`;
+
+            $('#resultado').val(texto);
+        }
+
+        $(document).ready(function() {
+            // 1. Renderizar Formulario
+            renderizarFormulario();
+
+            // 2. Manejar eventos de teclado (0 al 4)
+            $('.btn-group-toggle').on('keydown', function(e) {
+                let keyNum = parseInt(e.key);
+                
+                // Si presiona un número del 0 al 4
+                if (keyNum >= 0 && keyNum <= 4) {
+                    e.preventDefault(); 
+                    
+                    let $buttons = $(this).find('label.btn');
+                    let $radio = $buttons.eq(keyNum).find('input[type="radio"]');
+                    
+                    $radio.prop('checked', true);
+                    $radio.trigger('change'); 
+                }
+            });
+
+            // 3. Manejar el cambio visual de los botones radio
+            $(document).on('change', '#escalasForm input[type="radio"]', function() {
+                let $group = $(this).closest('.btn-group-toggle');
+                $group.find('.btn').removeClass('active');
+                $(this).closest('.btn').addClass('active');
+                
+                calcularResultado();
+            });
+
+            // 4. Recalcular al cambiar los selects extra
+            $('#estadoClinico, #hoehnYahr').on('change', calcularResultado);
+
+            // 5. Botón de Reinicio
+            $('#resetButton').on('click', function() {
+                $('#escalasForm')[0].reset(); 
+                $('.btn-group-toggle .btn').removeClass('active');
+                
+                // Volver a activar la clase active para los botones con value 0
+                $('.btn-group-toggle input[type="radio"][value="0"]').prop('checked', true).each(function() {
+                    $(this).closest('.btn').addClass('active');
+                });
+                
+                $('#estadoClinico').val('ON');
+                $('#hoehnYahr').val('No evaluado');
+                
+                calcularResultado();
+            });
+
+            // 6. Botón de Copiar usando execCommand (Fallback seguro para Iframes)
+            $('#copyButton').on('click', function() {
+                var copyText = document.getElementById("resultado");
+                copyText.select();
+                copyText.setSelectionRange(0, 99999); /* Para móviles */
+                
+                try {
+                    document.execCommand("copy");
+                    $('#copyAlert').removeClass('d-none').fadeIn().delay(2000).fadeOut();
+                } catch(err) {
+                    alert("No se pudo copiar el texto. Selecciona y copia manualmente.");
+                }
+            });
+
+            // Cálculo inicial
+            calcularResultado();
+        });
+    </script>
+</body>
+</html>
