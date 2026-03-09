@@ -307,10 +307,6 @@
             texto += `Parte II: ${scores.part2}/52 puntos [${vals.part2.join(', ')}] \n`;
             texto += `Parte III: ${scores.part3}/132 puntos [${vals.part3.join(', ')}] \n`;
             texto += `Parte IV: ${scores.part4}/24 puntos [${vals.part4.join(', ')}] \n`;
-            
-            // Vector de datos completo unificado para extracción automatizada
-            let vectorCompleto = [].concat(vals.part1, vals.part2, vals.part3, vals.part4);
-            texto += `Vector completo: [${vectorCompleto.join(', ')}]`;
 
             $('#resultado').val(texto);
         }
